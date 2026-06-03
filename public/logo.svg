@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="#1c1917"/>
+  <!-- Envelope base -->
+  <rect x="96" y="156" width="320" height="200" rx="24" fill="#d6a341" fill-opacity="0.15" stroke="#d6a341" stroke-width="12"/>
+  <!-- Envelope flap -->
+  <path d="M96 176L256 296L416 176" stroke="#d6a341" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Envelope lines -->
+  <line x1="96" y1="276" x2="200" y2="276" stroke="#d6a341" stroke-width="8" stroke-linecap="round" stroke-opacity="0.6"/>
+  <line x1="96" y1="316" x2="240" y2="316" stroke="#d6a341" stroke-width="8" stroke-linecap="round" stroke-opacity="0.4"/>
+  <!-- Sparkle star (AI) -->
+  <path d="M368 120 L376 104 L384 120 L400 128 L384 136 L376 152 L368 136 L352 128 Z" fill="#6e7d3f"/>
+  <!-- Small sparkle -->
+  <circle cx="408" cy="96" r="4" fill="#6e7d3f"/>
+  <circle cx="424" cy="112" r="3" fill="#6e7d3f" fill-opacity="0.6"/>
+</svg>
