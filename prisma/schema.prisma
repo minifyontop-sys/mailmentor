@@ -1,0 +1,200 @@
+// Prisma schema for MailMentor
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// NextAuth core tables (Account, Session, VerificationToken)
+// These match the next-auth v4 Prisma adapter shape so we can add it later
+// if we want full DB-backed sessions. For now we still use JWT sessions;
+// Account is here so we can attach provider tokens to a user row.
+// ---------------------------------------------------------------------------
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ---------------------------------------------------------------------------
+// User
+// ---------------------------------------------------------------------------
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String?  @unique
+  email     String   @unique
+  name      String?
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts       Account[]
+  sessions       Session[]
+  profile        ProfileMirror?
+  tasks          TaskMirror[]
+  recipes        Recipe[]
+  pendingActions PendingAction[]
+  actionLog      ActionLog[]
+  connectors     Connector[]
+}
+
+// ---------------------------------------------------------------------------
+// Profile + Tasks — mirror of the localStorage state. Server is the source
+// of truth; localStorage is a cache that gets hydrated on first load and
+// written back on change.
+// ---------------------------------------------------------------------------
+
+model ProfileMirror {
+  userId          String   @id
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data            Json
+  generatedAt     DateTime?
+  sourceEmailCount Int     @default(0)
+  replyMode       String   @default("always") // "always" | "strict"
+  updatedAt       DateTime @updatedAt
+}
+
+model TaskMirror {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailId   String?
+  threadId  String?
+  subject   String
+  task      String
+  sender    String?
+  done      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, done])
+}
+
+// ---------------------------------------------------------------------------
+// Connectors — third-party integrations (Google Calendar, Notion, Slack...).
+// Tokens are encrypted with a key derived from AUTH_SECRET (see
+// lib/crypto.server.ts). metadata holds provider-specific config (calendar
+// id, workspace id, channel id, etc.).
+// ---------------------------------------------------------------------------
+
+model Connector {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider     String   // "google-calendar" | "notion" | "slack" | ...
+  accessToken  String?  @db.Text // AES-256-GCM ciphertext
+  refreshToken String?  @db.Text // AES-256-GCM ciphertext
+  expiresAt    DateTime?
+  scope        String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, provider])
+}
+
+// ---------------------------------------------------------------------------
+// Recipes — user-defined automation rules. naturalLanguage is the original
+// prompt; trigger / conditions / actions are the LLM-parsed structured form.
+// Whitelisted action types only (see lib/recipe/action-registry.ts).
+// ---------------------------------------------------------------------------
+
+model Recipe {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  naturalLanguage String   @db.Text
+  trigger         Json
+  conditions      Json     @default("[]")
+  actions         Json
+  enabled         Boolean  @default(true)
+  lastRunAt       DateTime?
+  runCount        Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId, enabled])
+}
+
+// ---------------------------------------------------------------------------
+// PendingAction — a recipe-triggered action that's been queued for user
+// approval. The user reviews in the side panel and approves / denies.
+// ---------------------------------------------------------------------------
+
+model PendingAction {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipeId       String?
+  triggerEmailId String?
+  actionType     String
+  payload        Json
+  preview        String   @db.Text
+  status         String   @default("pending") // "pending" | "approved" | "denied" | "expired"
+  expiresAt      DateTime?
+  createdAt      DateTime @default(now())
+  resolvedAt     DateTime?
+
+  @@index([userId, status, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// ActionLog — append-only audit trail. Every approve / deny / execute
+// lands here. Powers the "history" view + provides the data for the AI
+// to learn from over time.
+// ---------------------------------------------------------------------------
+
+model ActionLog {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipeId   String?
+  actionType String
+  status     String   // "approved" | "denied" | "executed" | "failed"
+  payload    Json
+  result     Json?
+  error      String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, actionType])
+}

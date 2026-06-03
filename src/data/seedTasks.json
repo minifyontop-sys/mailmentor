@@ -1,0 +1,38 @@
+[
+  {
+    "id": "tk-seed-001",
+    "description": "Send Q2 quarterly report to Sarah",
+    "deadline": "Friday EOD",
+    "sourceEmailId": "em-001",
+    "sourceEmailSubject": "Q2 Quarterly Report — needed by Friday",
+    "done": false,
+    "createdAt": "2026-05-30T08:14:00Z"
+  },
+  {
+    "id": "tk-seed-002",
+    "description": "Confirm Wednesday 2pm project sync with Marcus",
+    "deadline": "Tuesday",
+    "sourceEmailId": "em-002",
+    "sourceEmailSubject": "Project sync — Wednesday 2pm?",
+    "done": false,
+    "createdAt": "2026-05-30T11:42:00Z"
+  },
+  {
+    "id": "tk-seed-003",
+    "description": "Reply to Marcus with revised launch plan",
+    "deadline": "Thursday",
+    "sourceEmailId": "em-004",
+    "sourceEmailSubject": "Re: Launch timeline — slipping by 2 weeks?",
+    "done": false,
+    "createdAt": "2026-05-29T14:20:00Z"
+  },
+  {
+    "id": "tk-seed-004",
+    "description": "Pick up milk on the way home",
+    "deadline": "Tonight",
+    "sourceEmailId": "em-003",
+    "sourceEmailSubject": "Dinner tonight?",
+    "done": false,
+    "createdAt": "2026-05-30T16:05:00Z"
+  }
+]
