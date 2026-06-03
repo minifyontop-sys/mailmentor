@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   description:
     "Read your real Gmail or Outlook, rank what matters, extract to-dos, draft replies in your voice, and run one-line automations. OAuth-only. No email stored. Free during private beta.",
   verification: {
-    google: "-ynCh_8pEAaAPpoLagQHaPXZjonxA3sfI4URTpvbugU",
+    google: "3FQ2VbsVeSFWmTgFvz8sgw9sR3QCE9422bhtl3qb_eY",
   },
 };
 
