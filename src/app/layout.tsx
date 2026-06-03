@@ -23,6 +23,9 @@ export const metadata: Metadata = {
   title: "MailMentor — your inbox, intelligently.",
   description:
     "Read your real Gmail or Outlook, rank what matters, extract to-dos, draft replies in your voice, and run one-line automations. OAuth-only. No email stored. Free during private beta.",
+  verification: {
+    google: "-ynCh_8pEAaAPpoLagQHaPXZjonxA3sfI4URTpvbugU",
+  },
 };
 
 export default function RootLayout({
