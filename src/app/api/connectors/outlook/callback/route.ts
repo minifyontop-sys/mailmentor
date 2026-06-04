@@ -12,7 +12,7 @@ async function exchangeMicrosoftCode(code: string): Promise<{
   const clientSecret = process.env.AZURE_AD_CLIENT_SECRET;
   const tenantId = process.env.AZURE_AD_TENANT_ID || "common";
   if (!clientId || !clientSecret) throw new Error("Microsoft OAuth not configured");
-  const redirectUri = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/connectors/outlook/callback`;
+  const redirectUri = `${(process.env.NEXTAUTH_URL || "http://localhost:3000").replace(/\/+$/, "")}/api/connectors/outlook/callback`;
   const res = await fetch(
     `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
     {

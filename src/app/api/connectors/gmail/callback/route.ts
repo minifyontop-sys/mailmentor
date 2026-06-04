@@ -11,7 +11,7 @@ async function exchangeGoogleCode(code: string): Promise<{
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   if (!clientId || !clientSecret) throw new Error("Google OAuth not configured");
-  const redirectUri = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/connectors/gmail/callback`;
+  const redirectUri = `${(process.env.NEXTAUTH_URL || "http://localhost:3000").replace(/\/+$/, "")}/api/connectors/gmail/callback`;
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },

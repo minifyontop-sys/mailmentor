@@ -10,7 +10,7 @@ function getGoogleOAuthUrl(userId: string, userEmail: string) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   if (!clientId) throw new Error("GOOGLE_CLIENT_ID not configured");
   const state = Buffer.from(JSON.stringify({ userId, email: userEmail, ts: Date.now() })).toString("base64");
-  const redirectUri = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/connectors/gmail/callback`;
+  const redirectUri = `${(process.env.NEXTAUTH_URL || "http://localhost:3000").replace(/\/+$/, "")}/api/connectors/gmail/callback`;
   const scope = [
     "gmail.readonly",
     "gmail.send",
@@ -34,7 +34,7 @@ function getMicrosoftOAuthUrl(userId: string, userEmail: string) {
   const clientId = process.env.AZURE_AD_CLIENT_ID;
   if (!clientId) throw new Error("AZURE_AD_CLIENT_ID not configured");
   const state = Buffer.from(JSON.stringify({ userId, email: userEmail, ts: Date.now() })).toString("base64");
-  const redirectUri = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/connectors/outlook/callback`;
+  const redirectUri = `${(process.env.NEXTAUTH_URL || "http://localhost:3000").replace(/\/+$/, "")}/api/connectors/outlook/callback`;
   const scope = [
     "Mail.Read",
     "Mail.ReadWrite",
