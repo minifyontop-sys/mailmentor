@@ -155,7 +155,7 @@ export function ProfilePanel({
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 320, damping: 32 }}
             onClick={(e) => e.stopPropagation()}
-            className="absolute right-0 top-0 h-full w-[460px] max-w-[100vw] overflow-y-auto border-l border-border bg-card/90 shadow-2xl backdrop-blur-xl"
+            className="absolute right-0 top-0 h-full w-[460px] max-w-[calc(100vw-2rem)] overflow-y-auto border-l border-border bg-card/90 shadow-2xl backdrop-blur-xl"
           >
             <div className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-border bg-card/70 px-5 backdrop-blur-md">
               <div className="flex items-center gap-2">

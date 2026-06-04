@@ -12,6 +12,7 @@ import {
   Inbox as InboxIcon,
   Wand2,
   AlertCircle,
+  ArrowLeft,
   type LucideIcon,
 } from "lucide-react";
 
@@ -35,6 +36,7 @@ type SendStatus = "idle" | "sending" | "sent" | "error";
 export function SmartAssistant() {
   const selectedId = useEmailStore((s) => s.selectedEmailId);
   const generateReplyToken = useEmailStore((s) => s.generateReplyToken);
+  const selectEmail = useEmailStore((s) => s.selectEmail);
   const addTasks = useTaskStore((s) => s.addTasks);
   const profile = useProfileStore((s) => s.profile);
   const replyMode = useProfileStore((s) => s.replyMode);
@@ -69,6 +71,10 @@ export function SmartAssistant() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [generateReplyToken]);
+
+  const handleBack = () => {
+    selectEmail(null as any);
+  };
 
   if (!email) {
     return <EmptyState />;
@@ -172,8 +178,131 @@ export function SmartAssistant() {
   };
 
   return (
-    <aside className="relative flex h-full w-[400px] shrink-0 flex-col border-l border-border bg-card/50 backdrop-blur-xl">
-      {/* Top edge glow — static, no pulse */}
+    <>
+      {/* Desktop: side panel */}
+      <aside className="relative hidden h-full w-[400px] shrink-0 flex-col border-l border-border bg-card/50 backdrop-blur-xl md:flex">
+        <AssistantContent
+          email={email}
+          hasBody={hasBody}
+          bodyLoading={bodyLoading}
+          score={score}
+          breakdown={breakdown}
+          summary={summary}
+          reply={reply}
+          summaryLoading={summaryLoading}
+          replyLoading={replyLoading}
+          copied={copied}
+          taskChecks={taskChecks}
+          sendStatus={sendStatus}
+          onGenerateReply={onGenerateReply}
+          onSummarize={onSummarize}
+          onCopy={onCopy}
+          onSend={onSend}
+          setReply={setReply}
+          setTaskChecks={setTaskChecks}
+        />
+      </aside>
+
+      {/* Mobile: full-screen overlay */}
+      <AnimatePresence>
+        {selectedId && (
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", stiffness: 320, damping: 30 }}
+            className="fixed inset-0 z-40 flex flex-col bg-background md:hidden"
+          >
+            <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-4">
+              <button
+                type="button"
+                onClick={handleBack}
+                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
+              </button>
+              <h2 className="text-[13px] font-medium text-foreground">
+                Smart Assistant
+              </h2>
+              <div className="ml-auto">
+                <ScoreChip
+                  score={score}
+                  vip={breakdown.vip}
+                  keyword={breakdown.keyword}
+                  reply={breakdown.reply}
+                />
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <div className="space-y-6 px-4 py-5">
+                <AssistantBody
+                  email={email}
+                  hasBody={hasBody}
+                  bodyLoading={bodyLoading}
+                  summary={summary}
+                  reply={reply}
+                  summaryLoading={summaryLoading}
+                  replyLoading={replyLoading}
+                  copied={copied}
+                  taskChecks={taskChecks}
+                  sendStatus={sendStatus}
+                  onGenerateReply={onGenerateReply}
+                  onSummarize={onSummarize}
+                  onCopy={onCopy}
+                  onSend={onSend}
+                  setReply={setReply}
+                  setTaskChecks={setTaskChecks}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+function AssistantContent({
+  email,
+  hasBody,
+  bodyLoading,
+  score,
+  breakdown,
+  summary,
+  reply,
+  summaryLoading,
+  replyLoading,
+  copied,
+  taskChecks,
+  sendStatus,
+  onGenerateReply,
+  onSummarize,
+  onCopy,
+  onSend,
+  setReply,
+  setTaskChecks,
+}: {
+  email: Email;
+  hasBody: boolean;
+  bodyLoading: boolean;
+  score: number;
+  breakdown: { vip: boolean; keyword: boolean; reply: boolean };
+  summary: AIResult | null;
+  reply: string | null;
+  summaryLoading: boolean;
+  replyLoading: boolean;
+  copied: boolean;
+  taskChecks: Record<number, boolean>;
+  sendStatus: SendStatus;
+  onGenerateReply: () => void;
+  onSummarize: () => void;
+  onCopy: () => void;
+  onSend: () => void;
+  setReply: (v: string | null) => void;
+  setTaskChecks: (fn: (prev: Record<number, boolean>) => Record<number, boolean>) => void;
+}) {
+  return (
+    <>
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/55 to-transparent"
@@ -202,192 +331,251 @@ export function SmartAssistant() {
 
       <div className="flex-1 overflow-y-auto">
         <div className="space-y-6 px-5 py-5">
-          <section>
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground/80">
-              {email.sender.name}
-              <span className="mx-1.5 opacity-50">·</span>
-              {new Date(email.date).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-              })}
-            </p>
-            <h3 className="mt-1.5 font-serif-italic text-[20px] font-normal leading-snug tracking-tight text-foreground">
-              {email.subject}
-            </h3>
-            {hasBody ? (
-              <p className="mt-3 whitespace-pre-line text-[12.5px] leading-relaxed text-muted-foreground">
-                {email.body}
-              </p>
-            ) : bodyLoading ? (
-              <div className="mt-3 space-y-2">
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-11/12" />
-                <Skeleton className="h-3 w-2/3" />
-              </div>
-            ) : (
-              <p className="mt-3 text-[12.5px] italic text-muted-foreground/70">
-                No content.
-              </p>
-            )}
-          </section>
-
-          <div className="space-y-2">
-            <Button
-              className="w-full gap-2"
-              disabled={replyLoading || !hasBody}
-              onClick={onGenerateReply}
-            >
-              {replyLoading ? (
-                <Spinner />
-              ) : (
-                <Reply className="h-3.5 w-3.5" strokeWidth={2} />
-              )}
-              {replyLoading ? "Drafting…" : "Generate reply"}
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full gap-2"
-              disabled={summaryLoading || !hasBody}
-              onClick={onSummarize}
-            >
-              {summaryLoading ? (
-                <Spinner />
-              ) : (
-                <ListChecks className="h-3.5 w-3.5" strokeWidth={2} />
-              )}
-              {summaryLoading ? "Analyzing…" : "Summarize & extract tasks"}
-            </Button>
-          </div>
-
-          <AnimatePresence>
-            {summary && (
-              <motion.section
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
-                className="space-y-4"
-              >
-                {summary.tasks.length > 0 && (
-                  <div>
-                    <SectionLabel icon={ListChecks}>
-                      Tasks ({summary.tasks.length})
-                    </SectionLabel>
-                    <ul className="mt-2 space-y-1">
-                      {summary.tasks.map((t, i) => (
-                        <motion.li
-                          key={i}
-                          initial={{ opacity: 0, x: -4 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: i * 0.04 }}
-                          className="flex items-start gap-2.5 rounded-md px-2 py-1.5 text-[12.5px] leading-relaxed transition-colors hover:bg-secondary/40"
-                        >
-                          <Checkbox
-                            checked={!!taskChecks[i]}
-                            onCheckedChange={(v) =>
-                              setTaskChecks((prev) => ({
-                                ...prev,
-                                [i]: v === true,
-                              }))
-                            }
-                            className="mt-0.5"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <span
-                              className={cn(
-                                "block",
-                                taskChecks[i]
-                                  ? "text-muted-foreground/60 line-through"
-                                  : "text-foreground"
-                              )}
-                            >
-                              {t.description}
-                            </span>
-                            {t.deadline && (
-                              <span className="text-[11px] text-muted-foreground">
-                                {t.deadline}
-                              </span>
-                            )}
-                          </div>
-                        </motion.li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <div>
-                  <SectionLabel icon={Sparkles}>Summary</SectionLabel>
-                  <blockquote className="mt-2 border-l-2 border-primary/40 pl-3 text-[12.5px] leading-relaxed text-foreground/90">
-                    {summary.summary}
-                  </blockquote>
-                </div>
-              </motion.section>
-            )}
-
-            {reply && (
-              <motion.section
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
-              >
-                <div className="mb-2 flex items-center justify-between">
-                  <SectionLabel icon={Reply}>Reply draft</SectionLabel>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={onCopy}
-                      className="h-6 px-2 text-[11px]"
-                    >
-                      {copied ? (
-                        <>
-                          <Check className="h-3 w-3" /> Copied
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="h-3 w-3" /> Copy
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={onSend}
-                      disabled={
-                        sendStatus === "sending" || sendStatus === "sent"
-                      }
-                      className="h-6 px-2 text-[11px]"
-                    >
-                      {sendStatus === "sending" ? (
-                        <Spinner />
-                      ) : sendStatus === "sent" ? (
-                        <>
-                          <Check className="h-3 w-3" /> Sent
-                        </>
-                      ) : (
-                        <>
-                          <Send className="h-3 w-3" /> Send
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-                <Textarea
-                  value={reply}
-                  onChange={(e) => setReply(e.target.value)}
-                  className="min-h-[200px] border-border bg-background/40 text-[12.5px] leading-relaxed focus-visible:border-primary/40 focus-visible:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]"
-                />
-                {sendStatus === "error" && (
-                  <p className="mt-1.5 flex items-center gap-1 text-[11px] text-destructive">
-                    <AlertCircle className="h-3 w-3" />
-                    Couldn&apos;t send. Try again.
-                  </p>
-                )}
-              </motion.section>
-            )}
-          </AnimatePresence>
+          <AssistantBody
+            email={email}
+            hasBody={hasBody}
+            bodyLoading={bodyLoading}
+            summary={summary}
+            reply={reply}
+            summaryLoading={summaryLoading}
+            replyLoading={replyLoading}
+            copied={copied}
+            taskChecks={taskChecks}
+            sendStatus={sendStatus}
+            onGenerateReply={onGenerateReply}
+            onSummarize={onSummarize}
+            onCopy={onCopy}
+            onSend={onSend}
+            setReply={setReply}
+            setTaskChecks={setTaskChecks}
+          />
         </div>
       </div>
-    </aside>
+    </>
+  );
+}
+
+function AssistantBody({
+  email,
+  hasBody,
+  bodyLoading,
+  summary,
+  reply,
+  summaryLoading,
+  replyLoading,
+  copied,
+  taskChecks,
+  sendStatus,
+  onGenerateReply,
+  onSummarize,
+  onCopy,
+  onSend,
+  setReply,
+  setTaskChecks,
+}: {
+  email: Email;
+  hasBody: boolean;
+  bodyLoading: boolean;
+  summary: AIResult | null;
+  reply: string | null;
+  summaryLoading: boolean;
+  replyLoading: boolean;
+  copied: boolean;
+  taskChecks: Record<number, boolean>;
+  sendStatus: SendStatus;
+  onGenerateReply: () => void;
+  onSummarize: () => void;
+  onCopy: () => void;
+  onSend: () => void;
+  setReply: (v: string | null) => void;
+  setTaskChecks: (fn: (prev: Record<number, boolean>) => Record<number, boolean>) => void;
+}) {
+  return (
+    <>
+      <section>
+        <p className="text-[11px] uppercase tracking-wider text-muted-foreground/80">
+          {email.sender.name}
+          <span className="mx-1.5 opacity-50">·</span>
+          {new Date(email.date).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          })}
+        </p>
+        <h3 className="mt-1.5 font-serif-italic text-[20px] font-normal leading-snug tracking-tight text-foreground">
+          {email.subject}
+        </h3>
+        {hasBody ? (
+          <p className="mt-3 whitespace-pre-line text-[12.5px] leading-relaxed text-muted-foreground">
+            {email.body}
+          </p>
+        ) : bodyLoading ? (
+          <div className="mt-3 space-y-2">
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-11/12" />
+            <Skeleton className="h-3 w-2/3" />
+          </div>
+        ) : (
+          <p className="mt-3 text-[12.5px] italic text-muted-foreground/70">
+            No content.
+          </p>
+        )}
+      </section>
+
+      <div className="space-y-2">
+        <Button
+          className="w-full gap-2"
+          disabled={replyLoading || !hasBody}
+          onClick={onGenerateReply}
+        >
+          {replyLoading ? (
+            <Spinner />
+          ) : (
+            <Reply className="h-3.5 w-3.5" strokeWidth={2} />
+          )}
+          {replyLoading ? "Drafting…" : "Generate reply"}
+        </Button>
+        <Button
+          variant="outline"
+          className="w-full gap-2"
+          disabled={summaryLoading || !hasBody}
+          onClick={onSummarize}
+        >
+          {summaryLoading ? (
+            <Spinner />
+          ) : (
+            <ListChecks className="h-3.5 w-3.5" strokeWidth={2} />
+          )}
+          {summaryLoading ? "Analyzing…" : "Summarize & extract tasks"}
+        </Button>
+      </div>
+
+      <AnimatePresence>
+        {summary && (
+          <motion.section
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+            className="space-y-4"
+          >
+            {summary.tasks.length > 0 && (
+              <div>
+                <SectionLabel icon={ListChecks}>
+                  Tasks ({summary.tasks.length})
+                </SectionLabel>
+                <ul className="mt-2 space-y-1">
+                  {summary.tasks.map((t, i) => (
+                    <motion.li
+                      key={i}
+                      initial={{ opacity: 0, x: -4 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.04 }}
+                      className="flex items-start gap-2.5 rounded-md px-2 py-1.5 text-[12.5px] leading-relaxed transition-colors hover:bg-secondary/40"
+                    >
+                      <Checkbox
+                        checked={!!taskChecks[i]}
+                        onCheckedChange={(v) =>
+                          setTaskChecks((prev) => ({
+                            ...prev,
+                            [i]: v === true,
+                          }))
+                        }
+                        className="mt-0.5"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <span
+                          className={cn(
+                            "block",
+                            taskChecks[i]
+                              ? "text-muted-foreground/60 line-through"
+                              : "text-foreground"
+                          )}
+                        >
+                          {t.description}
+                        </span>
+                        {t.deadline && (
+                          <span className="text-[11px] text-muted-foreground">
+                            {t.deadline}
+                          </span>
+                        )}
+                      </div>
+                    </motion.li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div>
+              <SectionLabel icon={Sparkles}>Summary</SectionLabel>
+              <blockquote className="mt-2 border-l-2 border-primary/40 pl-3 text-[12.5px] leading-relaxed text-foreground/90">
+                {summary.summary}
+              </blockquote>
+            </div>
+          </motion.section>
+        )}
+
+        {reply && (
+          <motion.section
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <SectionLabel icon={Reply}>Reply draft</SectionLabel>
+              <div className="flex items-center gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={onCopy}
+                  className="h-6 px-2 text-[11px]"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-3 w-3" /> Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3 w-3" /> Copy
+                    </>
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={onSend}
+                  disabled={
+                    sendStatus === "sending" || sendStatus === "sent"
+                  }
+                  className="h-6 px-2 text-[11px]"
+                >
+                  {sendStatus === "sending" ? (
+                    <Spinner />
+                  ) : sendStatus === "sent" ? (
+                    <>
+                      <Check className="h-3 w-3" /> Sent
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-3 w-3" /> Send
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+            <Textarea
+              value={reply}
+              onChange={(e) => setReply(e.target.value)}
+              className="min-h-[200px] border-border bg-background/40 text-[12.5px] leading-relaxed focus-visible:border-primary/40 focus-visible:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]"
+            />
+            {sendStatus === "error" && (
+              <p className="mt-1.5 flex items-center gap-1 text-[11px] text-destructive">
+                <AlertCircle className="h-3 w-3" />
+                Couldn&apos;t send. Try again.
+              </p>
+            )}
+          </motion.section>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 
@@ -468,36 +656,39 @@ function Spinner() {
 
 function EmptyState() {
   return (
-    <aside className="relative flex h-full w-[400px] shrink-0 flex-col items-center justify-center border-l border-border bg-card/50 px-8 text-center backdrop-blur-xl">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent"
-      />
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-border bg-secondary/30">
-          <InboxIcon
-            className="h-5 w-5 text-muted-foreground"
-            strokeWidth={1.5}
-          />
-        </div>
-        <h2 className="mt-5 font-serif-italic text-2xl text-foreground">
-          Select a message.
-        </h2>
-        <p className="mt-2 max-w-[260px] text-[13px] leading-relaxed text-muted-foreground">
-          Summarize it, extract your to-dos, and draft a reply — all in one
-          click.
-        </p>
-        <div className="mt-6 inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-[11px] text-muted-foreground">
-          <kbd className="rounded border border-border bg-background/60 px-1.5 py-0.5 text-[10px]">
-            ⌘K
-          </kbd>
-          to jump to anything
-        </div>
-      </motion.div>
-    </aside>
+    <>
+      {/* Desktop */}
+      <aside className="relative hidden h-full w-[400px] shrink-0 flex-col items-center justify-center border-l border-border bg-card/50 px-8 text-center backdrop-blur-xl md:flex">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent"
+        />
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-border bg-secondary/30">
+            <InboxIcon
+              className="h-5 w-5 text-muted-foreground"
+              strokeWidth={1.5}
+            />
+          </div>
+          <h2 className="mt-5 font-serif-italic text-2xl text-foreground">
+            Select a message.
+          </h2>
+          <p className="mt-2 max-w-[260px] text-[13px] leading-relaxed text-muted-foreground">
+            Summarize it, extract your to-dos, and draft a reply — all in one
+            click.
+          </p>
+          <div className="mt-6 inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-[11px] text-muted-foreground">
+            <kbd className="rounded border border-border bg-background/60 px-1.5 py-0.5 text-[10px]">
+              ⌘K
+            </kbd>
+            to jump to anything
+          </div>
+        </motion.div>
+      </aside>
+    </>
   );
 }

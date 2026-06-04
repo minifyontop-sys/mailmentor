@@ -3,6 +3,7 @@
 import { useCallback, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Menu } from "lucide-react";
 
 import { Sidebar } from "@/components/Sidebar";
 import { CommandK } from "@/components/CommandK";
@@ -10,6 +11,7 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useEmails } from "@/hooks/useEmails";
 import { useEmailStore } from "@/store/emailStore";
 import { useProfileStore } from "@/store/profileStore";
+import { useUIStore } from "@/store/uiStore";
 import { useToast } from "@/components/Toast";
 
 export default function AppLayout({
@@ -19,6 +21,7 @@ export default function AppLayout({
 }) {
   const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
+  const openSidebar = useUIStore((s) => s.openSidebar);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -41,7 +44,17 @@ export default function AppLayout({
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
       <Sidebar />
-      <main className="flex-1 overflow-hidden">{children}</main>
+      <main className="flex-1 overflow-hidden">
+        <button
+          type="button"
+          onClick={openSidebar}
+          className="fixed left-3 top-3 z-30 flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background/80 text-muted-foreground backdrop-blur-md transition-colors hover:bg-secondary hover:text-foreground md:hidden"
+          aria-label="Open menu"
+        >
+          <Menu className="h-4 w-4" strokeWidth={1.75} />
+        </button>
+        {children}
+      </main>
       <AppShellChrome />
       <ProfileBootstrap />
     </div>

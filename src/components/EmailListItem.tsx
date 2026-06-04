@@ -80,7 +80,7 @@ export function EmailListItem({ email }: { email: Email }) {
       whileTap={{ scale: 0.995 }}
       transition={{ type: "spring", stiffness: 480, damping: 32 }}
       className={cn(
-        "group relative flex w-full items-start gap-3 border-b border-border/40 px-5 py-3.5 text-left transition-colors duration-200",
+        "group relative flex w-full items-start gap-2.5 border-b border-border/40 px-3 py-3 text-left transition-colors duration-200 md:gap-3 md:px-5 md:py-3.5",
         isActive ? "bg-secondary/70" : "hover:bg-secondary/35"
       )}
     >
@@ -96,7 +96,7 @@ export function EmailListItem({ email }: { email: Email }) {
       {/* Avatar */}
       <div
         className={cn(
-          "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-[11px] font-medium text-foreground/80 transition-shadow",
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-[10px] font-medium text-foreground/80 transition-shadow md:h-9 md:w-9 md:text-[11px]",
           avatarGradient(email.sender.email),
           !isRead && "moss-ring"
         )}
@@ -123,7 +123,7 @@ export function EmailListItem({ email }: { email: Email }) {
           )}
           <span
             className={cn(
-              "min-w-0 flex-1 truncate text-[13.5px] font-serif-italic",
+              "min-w-0 flex-1 truncate text-[12.5px] font-serif-italic md:text-[13.5px]",
               !isRead
                 ? "font-semibold text-foreground"
                 : "text-muted-foreground"
@@ -138,7 +138,7 @@ export function EmailListItem({ email }: { email: Email }) {
 
         <div
           className={cn(
-            "mt-0.5 truncate text-[13px]",
+            "mt-0.5 truncate text-[12px] md:text-[13px]",
             !isRead
               ? "font-medium text-foreground"
               : "text-muted-foreground"

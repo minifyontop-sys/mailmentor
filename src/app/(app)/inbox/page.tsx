@@ -14,12 +14,11 @@ function InboxView() {
   const selectEmail = useEmailStore((s) => s.selectEmail);
   const markAsRead = useEmailStore((s) => s.markAsRead);
   const readIds = useEmailStore((s) => s.readIds);
+  const selectedId = useEmailStore((s) => s.selectedEmailId);
 
   useEffect(() => {
     if (!emailParam) return;
     const alreadyRead = readIds.has(emailParam);
-    // Always sync the selection so that j/k navigation and deep links
-    // can move the right-pane focus, even to messages already read.
     selectEmail(emailParam);
     if (!alreadyRead) {
       markAsRead(emailParam);
@@ -31,10 +30,6 @@ function InboxView() {
     }
   }, [emailParam, readIds, selectEmail, markAsRead]);
 
-  // Fire the recipe engine on every inbox mount. This pulls the
-  // most recent 10 messages, evaluates them against enabled recipes,
-  // and queues any matches as PendingAction rows. Best-effort: a 401
-  // (no active account) just silently no-ops.
   useEffect(() => {
     fetch("/api/recipes/run-for-inbox", {
       method: "POST",
@@ -47,9 +42,11 @@ function InboxView() {
 
   return (
     <div className="flex h-full w-full">
-      <div className="min-w-0 flex-1">
+      {/* Email list: full width on mobile when no email selected, hidden when email is open on mobile */}
+      <div className={`min-w-0 flex-1 ${selectedId ? "hidden md:block" : "block"}`}>
         <EmailList view={view} />
       </div>
+      {/* SmartAssistant: desktop side panel + mobile overlay handled inside component */}
       <SmartAssistant />
     </div>
   );

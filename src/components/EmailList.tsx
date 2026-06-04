@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, RefreshCw, X } from "lucide-react";
+import { Search, RefreshCw, X, SearchIcon } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Mail, Star, CheckCircle2, Inbox } from "lucide-react";
 
@@ -18,6 +18,7 @@ type View = "inbox" | "important";
 export function EmailList({ view }: { view: View }) {
   const { emails, isLoading, isRefreshing, error, refresh } = useEmails();
   const [query, setQuery] = useState("");
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const filtered = (() => {
     const q = query.trim().toLowerCase();
@@ -50,10 +51,10 @@ export function EmailList({ view }: { view: View }) {
 
   return (
     <section className="flex h-full w-full min-w-0 flex-col bg-background/30">
-      <div className="flex h-20 shrink-0 items-end justify-between gap-3 border-b border-border px-6 pb-4 pt-5">
-        <div>
+      <div className="flex h-16 shrink-0 items-end justify-between gap-3 border-b border-border px-4 pb-3 pt-4 md:h-20 md:px-6 md:pb-4 md:pt-5">
+        <div className="pl-10 md:pl-0">
           <h1
-            className="font-serif-italic text-[28px] font-normal leading-none tracking-tight text-foreground"
+            className="font-serif-italic text-[22px] font-normal leading-none tracking-tight text-foreground md:text-[28px]"
             style={{
               backgroundImage:
                 "linear-gradient(100deg, hsl(36 65% 55%) 0%, hsl(35 18% 94%) 35%, hsl(36 65% 55%) 60%, hsl(35 18% 94%) 100%)",
@@ -75,7 +76,17 @@ export function EmailList({ view }: { view: View }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="relative">
+          {/* Mobile search toggle */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative h-8 w-8 sm:hidden"
+            onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+          >
+            <SearchIcon className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.75} />
+          </Button>
+          {/* Desktop search */}
+          <div className="relative hidden sm:block">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
@@ -115,6 +126,30 @@ export function EmailList({ view }: { view: View }) {
           </Button>
         </div>
       </div>
+
+      {/* Mobile search bar */}
+      {mobileSearchOpen && (
+        <div className="border-b border-border px-4 py-2 sm:hidden">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search…"
+              autoFocus
+              className="h-8 w-full border-border bg-secondary/30 pl-7 text-[12.5px] transition-all focus-visible:border-primary/40 focus-visible:bg-secondary/60 focus-visible:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                <X className="h-3 w-3" strokeWidth={2} />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto">
         {isLoading && sorted.length === 0 ? (

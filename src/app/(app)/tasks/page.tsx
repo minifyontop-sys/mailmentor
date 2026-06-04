@@ -20,14 +20,14 @@ export default function TasksPage() {
 
   return (
     <div className="h-full w-full overflow-y-auto bg-background/30">
-      <div className="mx-auto w-full max-w-2xl px-6 py-10">
+      <div className="mx-auto w-full max-w-2xl px-4 py-8 md:px-6 md:py-10">
         <motion.header
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
-          className="mb-8"
+          className="mb-6 md:mb-8"
         >
-          <h1 className="font-serif-italic text-[28px] font-normal leading-none tracking-tight text-foreground">
+          <h1 className="pl-9 font-serif-italic text-[22px] font-normal leading-none tracking-tight text-foreground md:pl-0 md:text-[28px]">
             Tasks
           </h1>
           <p className="mt-2 text-[12.5px] text-muted-foreground">
