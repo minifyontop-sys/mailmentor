@@ -12,9 +12,9 @@ function getGoogleOAuthUrl(userId: string, userEmail: string) {
   const state = Buffer.from(JSON.stringify({ userId, email: userEmail, ts: Date.now() })).toString("base64");
   const redirectUri = `${(process.env.NEXTAUTH_URL || "http://localhost:3000").replace(/\/+$/, "")}/api/connectors/gmail/callback`;
   const scope = [
-    "gmail.readonly",
-    "gmail.send",
-    "gmail.modify",
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/gmail.send",
+    "https://www.googleapis.com/auth/gmail.modify",
     "openid",
     "email",
     "profile",
